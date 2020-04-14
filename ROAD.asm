@@ -19,13 +19,12 @@ tiempoTranscurrido db 0,'$'
 tiempoTranscurridoTxt db '00:00:00','$'
 espacio db 09h,'$'
 
-posicionCarroX db 155
+posicionCarroX db 153
 resultado db 100 dup('$')
 colorCarro db 127
 
 der db 'derecha','$'
 izq db 'izquierda','$'
-nada db 'nada','$'
 
 .code
 ;=================================================================
@@ -139,9 +138,25 @@ je _der
 jmp _salir
 
 _der:
+cmp posicionCarroX,208;si llgamos al borde derecho
+je _retroceder
+jne _no_retroceder
+_retroceder:
+sub posicionCarroX,5
+
+_no_retroceder:
 add posicionCarroX,5
 jmp _salir
+
+
 _izq:
+cmp posicionCarroX,83;si llgamos al borde izquierdo
+je _avanzar
+jne _no_avanzar
+_avanzar:
+add posicionCarroX,5
+
+_no_avanzar:
 sub posicionCarroX,5
 jmp _salir
 
@@ -259,19 +274,19 @@ xor ax,ax
 xor bx,bx
 xor cx,cx
 
-mov cx,44800
-mov di,6420
+mov cx,24000
+mov di,6478
 mov dx,29
 
 ciclo_pintar:
   mov [di], dx ; poner color en A000:DI
   inc di
   inc bx
-  cmp bx,280
+  cmp bx,150
   jne sig_pix_pintar
             ; nueva fila
   xor bx,bx ; resetear contador de columnas
-  add di,40
+  add di,170
   sig_pix_pintar:
   loop ciclo_pintar
 
