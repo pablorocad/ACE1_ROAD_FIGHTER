@@ -1,7 +1,7 @@
 include macros.asm
 
 .model small
-.stack 100h
+.stack 250h
 .data
 ;=================================================================
 ;===========================PRIMER MENU===========================
@@ -19,12 +19,21 @@ tiempoTranscurrido db 0,'$'
 tiempoTranscurridoTxt db '00:00:00','$'
 espacio db 09h,'$'
 
-posicionCarroX db 153
+;===============================CARRO=============================
+posicionCarroX dw 148
 resultado db 100 dup('$')
-colorCarro db 127
+colorCarro dw 127
 
-der db 'derecha','$'
-izq db 'izquierda','$'
+;===========================OBSTACULOS=============================
+posicionObstaculoX1 dw 100
+posicionObstaculoY1 dw 16000
+tipoObstaculo1 dw 31h
+
+posicionObstaculoX2 dw 180
+posicionObstaculoY2 dw 25600
+tipoObstaculo2 dw 32h
+
+numero dw ?
 
 .code
 ;=================================================================
@@ -48,26 +57,46 @@ je _cJ
 cmp al,33h
 je _salir
 
+;=================================================================
+;===============================JUEGO=============================
+;=================================================================
 _iJ:
 
 pushear
-mov dl,posicionCarroX
-mov dh,colorCarro
+;mov dl,posicionCarroX
+;mov dh,colorCarro
+push posicionCarroX
+push colorCarro
+push posicionObstaculoX1
+push posicionObstaculoY1
+push tipoObstaculo1
+push posicionObstaculoX2
+push posicionObstaculoY2
+push tipoObstaculo2
 
 mov ax,0013h
 int 10h
 mov ax,0a000h
 mov ds,ax
 
+pop tipoObstaculo2
+pop posicionObstaculoY2
+pop posicionObstaculoX2
+pop tipoObstaculo1
+pop posicionObstaculoY1
+pop posicionObstaculoX1
+pop colorCarro
+pop posicionCarroX
+
+call pintarPista
+;call pintarObstaculo
+mov dx,0
+call pintarCarro
 _loop_game:
-mov posicionCarroX,dl
-mov colorCarro,dh
 
-call pintarComponentes
+call moverObstaculo1
+call moverObstaculo2
 call detectarTecla
-
-mov dl,posicionCarroX
-mov dh,colorCarro
 
 cmp al,27
 je _exit_game
@@ -117,6 +146,20 @@ print tiempoTranscurridoTxt
 ret
 encabezado endp
 
+numeroAleatorio proc near
+pushear
+
+mov ah,2ch
+int 21h
+xor ax,ax
+mov dh,00h
+add ax,dx
+mov numero,ax
+
+popear
+ret
+numeroAleatorio endp
+
 ;=================================================================
 ;=============================FLECHAS=============================
 ;=================================================================
@@ -138,6 +181,14 @@ je _der
 jmp _salir
 
 _der:
+push colorCarro
+push dx
+mov dx,29
+mov colorCarro,29
+call pintarCarro
+pop dx
+pop colorCarro
+
 cmp posicionCarroX,208;si llgamos al borde derecho
 je _retroceder
 jne _no_retroceder
@@ -146,10 +197,18 @@ sub posicionCarroX,5
 
 _no_retroceder:
 add posicionCarroX,5
+
+mov dx,0
+call pintarCarro
 jmp _salir
 
 
 _izq:
+;delay 350
+pushear
+pintarFranjaPista 3600,48078
+popear
+
 cmp posicionCarroX,83;si llgamos al borde izquierdo
 je _avanzar
 jne _no_avanzar
@@ -158,11 +217,71 @@ add posicionCarroX,5
 
 _no_avanzar:
 sub posicionCarroX,5
+mov dx,0
+call pintarCarro
 jmp _salir
 
 _salir:
 ret
 detectarTecla endp
+
+moverObstaculo1 proc near
+pushear
+
+mov dx,78
+add dx,posicionObstaculoY1
+sub dx,3200
+pintarFranjaPista 1500,dx
+
+;Si ya llego al final==========================00
+cmp posicionObstaculoY1,60800
+je _remove
+jne _continue
+
+_remove:
+mov posicionObstaculoY1,16000
+
+_continue:
+add posicionObstaculoY1,320
+pintarObstaculo posicionObstaculoX1,posicionObstaculoY1,tipoObstaculo1
+
+_exit:
+mov dx,0
+call pintarCarro
+call pintarFranjaAbajo
+delay 180
+popear
+ret
+moverObstaculo1 endp
+
+moverObstaculo2 proc near
+pushear
+
+mov dx,78
+add dx,posicionObstaculoY2
+sub dx,3200
+pintarFranjaPista 1500,dx
+
+;Si ya llego al final==========================00
+cmp posicionObstaculoY2,60800
+je _remove
+jne _continue
+
+_remove:
+mov posicionObstaculoY2,16000
+
+_continue:
+add posicionObstaculoY2,320
+pintarObstaculo posicionObstaculoX2,posicionObstaculoY2,tipoObstaculo2
+
+_exit:
+mov dx,0
+call pintarCarro
+call pintarFranjaAbajo
+delay 180
+popear
+ret
+moverObstaculo2 endp
 
 GetTime proc near
     mov ah,2ch
@@ -191,80 +310,47 @@ Convert proc near
     ret
 Convert endp
 
+;=================================================================
+;==============================PINTAR=============================
+;=================================================================
 pintarCarro proc near
 pushear
-xor ax,ax
-xor bx,bx
-
-mov al,posicionCarroX
-add ax,48000;posicion Y fija
-
 ;LLANTAS IZQUIERDAS===========
+xor ax,ax
+mov ax,posicionCarroX
+add ax,48000;posicion Y fija
 sub ax,2
 add ax,1280
 mov si,ax
-call pintarLlanta
+pintarLlanta dx
 
 ;add si,318
 add si,2560
-call pintarLlanta
+pintarLlanta dx
 
 ;LLANTAS DERECHAS===========
 xor ax,ax
-
-mov al,posicionCarroX
+mov ax,posicionCarroX
 add ax,48000;posicion Y fija
 add ax,15
 add ax,1280
 mov si,ax
-call pintarLlanta
+pintarLlanta dx
 add si,2560
-call pintarLlanta
+pintarLlanta dx
 
 ;AUTO====================
 xor ax,ax
-mov al,posicionCarroX
+mov ax,posicionCarroX
 add ax,48000;posicion Y fija
-
 xor dx,dx
 mov di,ax
-mov dl,colorCarro
-mov cx,360
-xor bx,bx
-ciclo_pintar:
-  mov [di],dx ; poner color en A000:DI
-  inc di
-  inc bx
-  cmp bx,15
-  jne sig_pix_pintar
-            ; nueva fila
-  xor bx,bx ; resetear contador de columnas
-  add di,305
-  sig_pix_pintar:
-loop ciclo_pintar
+pintarCarcasa colorCarro
 
 popear
 ret
 pintarCarro endp
 
-pintarLlanta proc near
-mov dx,0
-mov cx,8
-xor bx,bx
-ciclo_pintar:
-  mov [si],dx ; poner color en A000:DI
-  inc si
-  inc bx
-  cmp bx,2
-  jne sig_pix_pintar
-            ; nueva fila
-  xor bx,bx ; resetear contador de columnas
-  add si,318
-  sig_pix_pintar:
-loop ciclo_pintar
-
-ret
-pintarLlanta endp
 
 pintarPista proc near
 push ax
@@ -296,15 +382,35 @@ pop ax
 ret
 pintarPista endp
 
+pintarFranjaAbajo proc near
+pushear
+xor ax,ax
+xor bx,bx
+xor cx,cx
+
+mov cx,3000
+mov di,57678
+mov dx,0
+
+ciclo_pintar:
+  mov [di], dx ; poner color en A000:DI
+  inc di
+  inc bx
+  cmp bx,150
+  jne sig_pix_pintar
+            ; nueva fila
+  xor bx,bx ; resetear contador de columnas
+  add di,170
+  sig_pix_pintar:
+  loop ciclo_pintar
+popear
+ret
+pintarFranjaAbajo endp
+
+
+
 ;=================================================================
 ;==============================JUEGO==============================
 ;=================================================================
-pintarComponentes proc near
-
-call pintarPista
-call pintarCarro
-
-ret
-pintarComponentes endp
 
 end
