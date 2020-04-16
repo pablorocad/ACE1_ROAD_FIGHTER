@@ -95,7 +95,8 @@ call pintarCarro
 _loop_game:
 
 call moverObstaculo1
-;call moverObstaculo2
+call moverObstaculo2
+delay 180
 call detectarTecla
 
 cmp al,27
@@ -228,6 +229,9 @@ detectarTecla endp
 moverObstaculo1 proc near
 pushear
 
+cmp tipoObstaculo1,-1
+je _exit
+
 mov dx,78
 add dx,posicionObstaculoY1
 sub dx,3200
@@ -270,27 +274,29 @@ jmp _continue
 
 _remove_point_t:
 pop cx
-mov posicionObstaculoY1,16000
 
 _remove:
-mov posicionObstaculoY1,16000
+mov posicionObstaculoY1,-1
+mov posicionObstaculoX1,-1
+mov tipoObstaculo1,-1
 jmp _continue
 
 _continue:
 add posicionObstaculoY1,320
 pintarObstaculo posicionObstaculoX1,posicionObstaculoY1,tipoObstaculo1
-
-_exit:
 mov dx,0
 call pintarCarro
 call pintarFranjaAbajo
-delay 180
+_exit:
 popear
 ret
 moverObstaculo1 endp
 
 moverObstaculo2 proc near
 pushear
+
+cmp tipoObstaculo2,-1
+je _exit
 
 mov dx,78
 add dx,posicionObstaculoY2
@@ -300,20 +306,54 @@ pintarFranjaPista 1500,dx
 ;Si ya llego al final==========================00
 cmp posicionObstaculoY2,60800
 je _remove
-jne _continue
+
+;Si llego al Y del carro==========================
+xor ax,ax
+mov ax,49600
+cmp posicionObstaculoY2,ax
+je _remove_points_x
+
+jmp _continue
+
+;Si llego al X del carro==========================
+_remove_points_x:
+xor cx,cx
+xor ax,ax
+
+mov cx,15
+mov ax,posicionCarroX
+_loop_comp_x:
+push cx
+mov cx,10
+mov bx,posicionObstaculoX2
+
+_loop_comp_x_int:
+cmp bx,ax
+je _remove_point_t
+inc bx
+Loop _loop_comp_x_int
+pop cx
+
+inc ax
+Loop _loop_comp_x
+jmp _continue
+
+_remove_point_t:
+pop cx
 
 _remove:
-mov posicionObstaculoY2,16000
+mov posicionObstaculoY2,-1
+mov posicionObstaculoX2,-1
+mov tipoObstaculo2,-1
+jmp _continue
 
 _continue:
 add posicionObstaculoY2,320
 pintarObstaculo posicionObstaculoX2,posicionObstaculoY2,tipoObstaculo2
-
-_exit:
 mov dx,0
 call pintarCarro
 call pintarFranjaAbajo
-delay 180
+_exit:
 popear
 ret
 moverObstaculo2 endp
