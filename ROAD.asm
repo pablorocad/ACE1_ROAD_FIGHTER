@@ -12,11 +12,11 @@ menuUsuario db 0ah,0dh,'1) Iniciar Juego',0ah,0dh,'2) Cargar Juego',0ah,0dh,'3) 
 ;=================================================================
 ;===============================JUEGO=============================
 ;=================================================================
-usuarioActual db 0,'$'
-nivelActual db 0,'$'
-contadorPuntos db 0,'$'
-tiempoTranscurrido db 0,'$'
-tiempoTranscurridoTxt db '00:00:00','$'
+usuarioActual dw 0,'$'
+nivelActual dw 0,'$'
+contadorPuntos dw 0,'$'
+tiempoTranscurrido dw 30h,'$'
+;tiempoTranscurridoTxt db '00:00:00','$'
 espacio db 09h,'$'
 
 ;===============================CARRO=============================
@@ -31,7 +31,7 @@ tipoObstaculo1 dw -3
 
 posicionObstaculoX2 dw 148
 posicionObstaculoY2 dw 25600
-tipoObstaculo2 dw 3
+tipoObstaculo2 dw -1
 
 numero dw ?
 
@@ -65,6 +65,7 @@ _iJ:
 pushear
 ;mov dl,posicionCarroX
 ;mov dh,colorCarro
+_reset:
 push posicionCarroX
 push colorCarro
 push posicionObstaculoX1
@@ -73,12 +74,19 @@ push tipoObstaculo1
 push posicionObstaculoX2
 push posicionObstaculoY2
 push tipoObstaculo2
+push tiempoTranscurrido
+push contadorPuntos
 
 mov ax,0013h
 int 10h
+
+call encabezado
+
 mov ax,0a000h
 mov ds,ax
 
+pop contadorPuntos
+pop tiempoTranscurrido
 pop tipoObstaculo2
 pop posicionObstaculoY2
 pop posicionObstaculoX2
@@ -87,14 +95,16 @@ pop posicionObstaculoY1
 pop posicionObstaculoX1
 pop colorCarro
 pop posicionCarroX
-
+;call encabezado
 call pintarPista
 ;call pintarObstaculo
 mov dx,0
 call pintarCarro
 _loop_game:
-
 call moverObstaculo1
+cmp al,8
+je _reset1
+
 call moverObstaculo2
 delay 180
 call detectarTecla
@@ -103,12 +113,41 @@ cmp al,27
 je _exit_game
 jne _loop_game
 
+_reset1:
+push posicionCarroX
+push colorCarro
+push posicionObstaculoX1
+push posicionObstaculoY1
+push tipoObstaculo1
+push posicionObstaculoX2
+push posicionObstaculoY2
+push tipoObstaculo2
+push tiempoTranscurrido
+push contadorPuntos
+
+mov ax,0003h
+int 10h
+mov ax,@data
+mov ds, ax;LIMPIAMOS
+
+pop contadorPuntos
+pop tiempoTranscurrido
+pop tipoObstaculo2
+pop posicionObstaculoY2
+pop posicionObstaculoX2
+pop tipoObstaculo1
+pop posicionObstaculoY1
+pop posicionObstaculoX1
+pop colorCarro
+pop posicionCarroX
+jmp _reset
+
 _exit_game:
 
 ;regresar a modo texto
   mov ax,0003h
   int 10h
-
+_j:
 popear
 mov ax,@data
 mov ds, ax;LIMPIAMOS
@@ -137,13 +176,23 @@ ret
 getchar endp
 
 encabezado proc near
+pushear
+
 print usuarioActual
 print espacio
 print nivelActual
 print espacio
+
+xor ax,ax
+mov ax,contadorPuntos
+convertirString resultado
+print resultado
+
 print contadorPuntos
 print espacio
-print tiempoTranscurridoTxt
+print tiempoTranscurrido
+
+popear
 ret
 encabezado endp
 
@@ -227,7 +276,7 @@ ret
 detectarTecla endp
 
 moverObstaculo1 proc near
-pushear
+;pushear
 
 cmp tipoObstaculo1,-1
 je _exit
@@ -274,11 +323,13 @@ jmp _continue
 
 _remove_point_t:
 pop cx
+inc contadorPuntos
+mov al,8
 
 _remove:
-mov posicionObstaculoY1,-1
-mov posicionObstaculoX1,-1
-mov tipoObstaculo1,-1
+mov posicionObstaculoY1,16000
+;mov posicionObstaculoX1,-1
+;mov tipoObstaculo1,-1
 jmp _continue
 
 _continue:
@@ -288,7 +339,7 @@ mov dx,0
 call pintarCarro
 call pintarFranjaAbajo
 _exit:
-popear
+;popear
 ret
 moverObstaculo1 endp
 

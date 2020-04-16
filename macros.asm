@@ -1,11 +1,29 @@
 print macro p1
-pusha
+pushear
 
 mov ah,09h          ;Function(print string)
 mov dx,offset p1         ;DX = String terminated by "$"
 int 21h
 
-popa           ;Interruptions DOS Functions
+popear        ;Interruptions DOS Functions
+endm
+
+message macro mesi,long,color
+mov ah,13h
+mov al,01h
+mov bh,00h
+mov bl,color
+lea bp,mesi
+mov cl,long
+int 10h
+endm
+
+poscur macro row,col
+mov ah,02h
+mov bh,00h
+mov dh,row
+mov dl,col
+int 10h
 endm
 
 pintarLlanta macro p1
