@@ -27,11 +27,11 @@ colorCarro dw 127
 ;===========================OBSTACULOS=============================
 posicionObstaculoX1 dw 100
 posicionObstaculoY1 dw 16000
-tipoObstaculo1 dw 31h
+tipoObstaculo1 dw -3
 
-posicionObstaculoX2 dw 180
+posicionObstaculoX2 dw 148
 posicionObstaculoY2 dw 25600
-tipoObstaculo2 dw 32h
+tipoObstaculo2 dw 3
 
 numero dw ?
 
@@ -95,7 +95,7 @@ call pintarCarro
 _loop_game:
 
 call moverObstaculo1
-call moverObstaculo2
+;call moverObstaculo2
 call detectarTecla
 
 cmp al,27
@@ -236,10 +236,45 @@ pintarFranjaPista 1500,dx
 ;Si ya llego al final==========================00
 cmp posicionObstaculoY1,60800
 je _remove
-jne _continue
+
+;Si llego al Y del carro==========================
+xor ax,ax
+mov ax,49600
+cmp posicionObstaculoY1,ax
+je _remove_points_x
+
+jmp _continue
+
+;Si llego al X del carro==========================
+_remove_points_x:
+xor cx,cx
+xor ax,ax
+
+mov cx,15
+mov ax,posicionCarroX
+_loop_comp_x:
+push cx
+mov cx,10
+mov bx,posicionObstaculoX1
+
+_loop_comp_x_int:
+cmp bx,ax
+je _remove_point_t
+inc bx
+Loop _loop_comp_x_int
+pop cx
+
+inc ax
+Loop _loop_comp_x
+jmp _continue
+
+_remove_point_t:
+pop cx
+mov posicionObstaculoY1,16000
 
 _remove:
 mov posicionObstaculoY1,16000
+jmp _continue
 
 _continue:
 add posicionObstaculoY1,320

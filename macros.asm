@@ -49,7 +49,7 @@ pintarObstaculo macro obsX,obsY,tipoObs
 LOCAL ciclo_pintar_int,sig_pix_pintar_int,_bad,_p
 pushear
 
-cmp tipoObs,31h
+cmp tipoObs,-3
 je _bad
 mov dx,43
 jmp _p
