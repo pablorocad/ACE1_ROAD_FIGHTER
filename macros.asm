@@ -210,6 +210,142 @@ Fin:
 popear
 endm
 
+resetVariables macro
+
+mov posicionCarroX,148
+mov posicionObstaculoX1,-1
+mov posicionObstaculoY1,9600
+mov tipoObstaculo1,-3
+mov posicionObstaculoX2,-1
+mov posicionObstaculoY2,9600
+mov tipoObstaculo2,-3
+mov posicionObstaculoX3,-1
+mov posicionObstaculoY3,9600
+mov tipoObstaculo3,-3
+mov posicionObstaculoX4,-1
+mov posicionObstaculoY4,9600
+mov tipoObstaculo4,-3
+mov posicionObstaculoX5,-1
+mov posicionObstaculoY5,9600
+mov tipoObstaculo5,-3
+mov posicionObstaculoX6,-1
+mov posicionObstaculoY6,9600
+mov tipoObstaculo6,3
+mov posicionObstaculoX7,-1
+mov posicionObstaculoY7,9600
+mov tipoObstaculo7,3
+mov posicionObstaculoX8,-1
+mov posicionObstaculoY8,9600
+mov tipoObstaculo8,3
+mov posicionObstaculoX9,-1
+mov posicionObstaculoY9,9600
+mov tipoObstaculo9,3
+mov posicionObstaculoX10,-1
+mov posicionObstaculoY10,9600
+mov tipoObstaculo10,3
+
+mov tiempoTranscurrido,0
+mov contadorPuntos,0
+mov tiempoNivel,30
+
+endm
+
+pushVariables macro
+push posicionCarroX
+push colorCarro
+push posicionObstaculoX1
+push posicionObstaculoY1
+push tipoObstaculo1
+push posicionObstaculoX2
+push posicionObstaculoY2
+push tipoObstaculo2
+push posicionObstaculoX3
+push posicionObstaculoY3
+push tipoObstaculo3
+push posicionObstaculoX4
+push posicionObstaculoY4
+push tipoObstaculo4
+push posicionObstaculoX5
+push posicionObstaculoY5
+push tipoObstaculo5
+
+push posicionObstaculoX6
+push posicionObstaculoY6
+push tipoObstaculo6
+push posicionObstaculoX7
+push posicionObstaculoY7
+push tipoObstaculo7
+push posicionObstaculoX8
+push posicionObstaculoY8
+push tipoObstaculo8
+push posicionObstaculoX9
+push posicionObstaculoY9
+push tipoObstaculo9
+push posicionObstaculoX10
+push posicionObstaculoY10
+push tipoObstaculo10
+push numero
+
+push puntosMalos
+push puntosBuenos
+
+push tiempoTranscurrido
+push contadorPuntos
+push tiempoNivel
+push tiempoPremio
+push timerPremio
+push tiempoObstaculo
+push timerObstaculo
+endm
+
+popVariables macro
+pop timerObstaculo
+pop tiempoObstaculo
+pop timerPremio
+pop tiempoPremio
+pop tiempoNivel
+pop contadorPuntos
+pop tiempoTranscurrido
+
+pop puntosBuenos
+pop puntosMalos
+
+pop numero
+pop tipoObstaculo10
+pop posicionObstaculoY10
+pop posicionObstaculoX10
+pop tipoObstaculo9
+pop posicionObstaculoY9
+pop posicionObstaculoX9
+pop tipoObstaculo8
+pop posicionObstaculoY8
+pop posicionObstaculoX8
+pop tipoObstaculo7
+pop posicionObstaculoY7
+pop posicionObstaculoX7
+pop tipoObstaculo6
+pop posicionObstaculoY6
+pop posicionObstaculoX6
+
+pop tipoObstaculo5
+pop posicionObstaculoY5
+pop posicionObstaculoX5
+pop tipoObstaculo4
+pop posicionObstaculoY4
+pop posicionObstaculoX4
+pop tipoObstaculo3
+pop posicionObstaculoY3
+pop posicionObstaculoX3
+pop tipoObstaculo2
+pop posicionObstaculoY2
+pop posicionObstaculoX2
+pop tipoObstaculo1
+pop posicionObstaculoY1
+pop posicionObstaculoX1
+pop colorCarro
+pop posicionCarroX
+endm
+
 pushear macro
   push ax
   push bx

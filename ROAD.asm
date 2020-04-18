@@ -14,26 +14,64 @@ menuUsuario db 0ah,0dh,'1) Iniciar Juego',0ah,0dh,'2) Cargar Juego',0ah,0dh,'3) 
 ;=================================================================
 usuarioActual dw 0,'$'
 nivelActual dw 0,'$'
-contadorPuntos dw 0,'$'
-tiempoTranscurrido dw 30h,'$'
-;tiempoTranscurridoTxt db '00:00:00','$'
+contadorPuntos dw 3
+tiempoTranscurrido dw 0
 espacio db 09h,'$'
+numero dw 0
 
 ;===============================CARRO=============================
 posicionCarroX dw 148
 resultado db 100 dup('$')
 colorCarro dw 127
 
-;===========================OBSTACULOS=============================
-posicionObstaculoX1 dw 100
-posicionObstaculoY1 dw 16000
+;========================OBSTACULOS========================
+puntosMalos dw 4
+puntosBuenos dw 5
+;========================OBSTACULOS MALOS========================
+posicionObstaculoX1 dw -1
+posicionObstaculoY1 dw 9600
 tipoObstaculo1 dw -3
+posicionObstaculoX2 dw -1
+posicionObstaculoY2 dw 9600
+tipoObstaculo2 dw -3
+posicionObstaculoX3 dw -1
+posicionObstaculoY3 dw 9600
+tipoObstaculo3 dw -3
+posicionObstaculoX4 dw -1
+posicionObstaculoY4 dw 9600
+tipoObstaculo4 dw -3
+posicionObstaculoX5 dw -1
+posicionObstaculoY5 dw 9600
+tipoObstaculo5 dw -3
 
-posicionObstaculoX2 dw 148
-posicionObstaculoY2 dw 25600
-tipoObstaculo2 dw -1
+;========================OBSTACULOS BUENOS========================
+posicionObstaculoX6 dw -1
+posicionObstaculoY6 dw 9600
+tipoObstaculo6 dw 3
+posicionObstaculoX7 dw -1
+posicionObstaculoY7 dw 9600
+tipoObstaculo7 dw 3
+posicionObstaculoX8 dw -1
+posicionObstaculoY8 dw 9600
+tipoObstaculo8 dw 3
+posicionObstaculoX9 dw -1
+posicionObstaculoY9 dw 9600
+tipoObstaculo9 dw 3
+posicionObstaculoX10 dw -1
+posicionObstaculoY10 dw 9600
+tipoObstaculo10 dw 3
 
-numero dw ?
+
+;============================TIEMPO==============================
+segundos db 0
+;timer dw 20
+tiempoNivel dw 30
+
+timerObstaculo dw 2
+tiempoObstaculo dw 2
+
+timerPremio dw 5
+tiempoPremio dw 5
 
 .code
 ;=================================================================
@@ -57,6 +95,8 @@ je _cJ
 cmp al,33h
 je _salir
 
+jmp _menuUsuario
+
 ;=================================================================
 ;===============================JUEGO=============================
 ;=================================================================
@@ -65,17 +105,9 @@ _iJ:
 pushear
 ;mov dl,posicionCarroX
 ;mov dh,colorCarro
+resetVariables
 _reset:
-push posicionCarroX
-push colorCarro
-push posicionObstaculoX1
-push posicionObstaculoY1
-push tipoObstaculo1
-push posicionObstaculoX2
-push posicionObstaculoY2
-push tipoObstaculo2
-push tiempoTranscurrido
-push contadorPuntos
+pushVariables
 
 mov ax,0013h
 int 10h
@@ -85,61 +117,87 @@ call encabezado
 mov ax,0a000h
 mov ds,ax
 
-pop contadorPuntos
-pop tiempoTranscurrido
-pop tipoObstaculo2
-pop posicionObstaculoY2
-pop posicionObstaculoX2
-pop tipoObstaculo1
-pop posicionObstaculoY1
-pop posicionObstaculoX1
-pop colorCarro
-pop posicionCarroX
-;call encabezado
+popVariables
+
+;===============================JUEGO=============================
 call pintarPista
-;call pintarObstaculo
 mov dx,0
 call pintarCarro
+
+TOP:
+mov ah,2ch
+int 21h
+MOV segundos,dh  ; DH has current second
 _loop_game:
+call insertarMalos
+call insertarBuenos
+
+;GETSEC:      ; Loops until the current second is not equal to the last, in BH
+mov ah,2Ch
+int 21h
+cmp segundos,dh  ; Here is the comparison to exit the loop and print 'A'
+jne PRINTA
+;jmp GETSEC
+
 call moverObstaculo1
 cmp al,8
 je _reset1
-
 call moverObstaculo2
-delay 180
+cmp al,8
+je _reset1
+call moverObstaculo3
+cmp al,8
+je _reset1
+call moverObstaculo4
+cmp al,8
+je _reset1
+call moverObstaculo5
+cmp al,8
+je _reset1
+
+call moverObstaculo6
+cmp al,8
+je _reset1
+call moverObstaculo7
+cmp al,8
+je _reset1
+call moverObstaculo8
+cmp al,8
+je _reset1
+call moverObstaculo9
+cmp al,8
+je _reset1
+call moverObstaculo10
+cmp al,8
+je _reset1
+
+;delay 80
 call detectarTecla
 
 cmp al,27
 je _exit_game
-jne _loop_game
+
+jmp _loop_game
+
+PRINTA:
+dec tiempoNivel
+dec timerPremio
+dec timerObstaculo
+inc tiempoTranscurrido
+cmp tiempoNivel,0
+je _exit_game
+jmp TOP
+
 
 _reset1:
-push posicionCarroX
-push colorCarro
-push posicionObstaculoX1
-push posicionObstaculoY1
-push tipoObstaculo1
-push posicionObstaculoX2
-push posicionObstaculoY2
-push tipoObstaculo2
-push tiempoTranscurrido
-push contadorPuntos
+pushVariables
 
 mov ax,0003h
 int 10h
 mov ax,@data
 mov ds, ax;LIMPIAMOS
 
-pop contadorPuntos
-pop tiempoTranscurrido
-pop tipoObstaculo2
-pop posicionObstaculoY2
-pop posicionObstaculoX2
-pop tipoObstaculo1
-pop posicionObstaculoY1
-pop posicionObstaculoX1
-pop colorCarro
-pop posicionCarroX
+popVariables
 jmp _reset
 
 _exit_game:
@@ -151,7 +209,7 @@ _j:
 popear
 mov ax,@data
 mov ds, ax;LIMPIAMOS
-
+;===============================JUEGO=============================
 jmp _menuUsuario
 
 _cJ:
@@ -183,14 +241,18 @@ print espacio
 print nivelActual
 print espacio
 
+mov resultado,0
 xor ax,ax
 mov ax,contadorPuntos
 convertirString resultado
 print resultado
-
-print contadorPuntos
 print espacio
-print tiempoTranscurrido
+
+mov resultado,0
+xor ax,ax
+mov ax,tiempoTranscurrido
+convertirString resultado
+print resultado
 
 popear
 ret
@@ -198,7 +260,6 @@ encabezado endp
 
 numeroAleatorio proc near
 pushear
-
 mov ah,2ch
 int 21h
 xor ax,ax
@@ -278,7 +339,7 @@ detectarTecla endp
 moverObstaculo1 proc near
 ;pushear
 
-cmp tipoObstaculo1,-1
+cmp posicionObstaculoX1,-1
 je _exit
 
 mov dx,78
@@ -323,13 +384,15 @@ jmp _continue
 
 _remove_point_t:
 pop cx
-inc contadorPuntos
+push bx
+mov bx,puntosMalos
+sub contadorPuntos,bx
+pop bx
 mov al,8
 
 _remove:
-mov posicionObstaculoY1,16000
-;mov posicionObstaculoX1,-1
-;mov tipoObstaculo1,-1
+mov posicionObstaculoY1,-1
+mov posicionObstaculoX1,-1
 jmp _continue
 
 _continue:
@@ -344,9 +407,9 @@ ret
 moverObstaculo1 endp
 
 moverObstaculo2 proc near
-pushear
+;pushear
 
-cmp tipoObstaculo2,-1
+cmp posicionObstaculoX2,-1
 je _exit
 
 mov dx,78
@@ -391,11 +454,15 @@ jmp _continue
 
 _remove_point_t:
 pop cx
+push bx
+mov bx,puntosMalos
+sub contadorPuntos,bx
+pop bx
+mov al,8
 
 _remove:
 mov posicionObstaculoY2,-1
 mov posicionObstaculoX2,-1
-mov tipoObstaculo2,-1
 jmp _continue
 
 _continue:
@@ -405,9 +472,554 @@ mov dx,0
 call pintarCarro
 call pintarFranjaAbajo
 _exit:
-popear
+;popear
 ret
 moverObstaculo2 endp
+
+moverObstaculo3 proc near
+;pushear
+
+cmp posicionObstaculoX3,-1
+je _exit
+
+mov dx,78
+add dx,posicionObstaculoY3
+sub dx,3200
+pintarFranjaPista 1500,dx
+
+;Si ya llego al final==========================00
+cmp posicionObstaculoY3,60800
+je _remove
+
+;Si llego al Y del carro==========================
+xor ax,ax
+mov ax,49600
+cmp posicionObstaculoY3,ax
+je _remove_points_x
+
+jmp _continue
+
+;Si llego al X del carro==========================
+_remove_points_x:
+xor cx,cx
+xor ax,ax
+
+mov cx,15
+mov ax,posicionCarroX
+_loop_comp_x:
+push cx
+mov cx,10
+mov bx,posicionObstaculoX3
+
+_loop_comp_x_int:
+cmp bx,ax
+je _remove_point_t
+inc bx
+Loop _loop_comp_x_int
+pop cx
+
+inc ax
+Loop _loop_comp_x
+jmp _continue
+
+_remove_point_t:
+pop cx
+push bx
+mov bx,puntosMalos
+sub contadorPuntos,bx
+pop bx
+mov al,8
+
+_remove:
+mov posicionObstaculoY3,-1
+mov posicionObstaculoX3,-1
+jmp _continue
+
+_continue:
+add posicionObstaculoY3,320
+pintarObstaculo posicionObstaculoX3,posicionObstaculoY3,tipoObstaculo3
+mov dx,0
+call pintarCarro
+call pintarFranjaAbajo
+_exit:
+;popear
+ret
+moverObstaculo3 endp
+
+moverObstaculo4 proc near
+;pushear
+
+cmp posicionObstaculoX4,-1
+je _exit
+
+mov dx,78
+add dx,posicionObstaculoY4
+sub dx,3200
+pintarFranjaPista 1500,dx
+
+;Si ya llego al final==========================00
+cmp posicionObstaculoY4,60800
+je _remove
+
+;Si llego al Y del carro==========================
+xor ax,ax
+mov ax,49600
+cmp posicionObstaculoY4,ax
+je _remove_points_x
+
+jmp _continue
+
+;Si llego al X del carro==========================
+_remove_points_x:
+xor cx,cx
+xor ax,ax
+
+mov cx,15
+mov ax,posicionCarroX
+_loop_comp_x:
+push cx
+mov cx,10
+mov bx,posicionObstaculoX4
+
+_loop_comp_x_int:
+cmp bx,ax
+je _remove_point_t
+inc bx
+Loop _loop_comp_x_int
+pop cx
+
+inc ax
+Loop _loop_comp_x
+jmp _continue
+
+_remove_point_t:
+pop cx
+push bx
+mov bx,puntosMalos
+sub contadorPuntos,bx
+pop bx
+mov al,8
+
+_remove:
+mov posicionObstaculoY4,-1
+mov posicionObstaculoX4,-1
+jmp _continue
+
+_continue:
+add posicionObstaculoY4,320
+pintarObstaculo posicionObstaculoX4,posicionObstaculoY4,tipoObstaculo4
+mov dx,0
+call pintarCarro
+call pintarFranjaAbajo
+_exit:
+;popear
+ret
+moverObstaculo4 endp
+
+moverObstaculo5 proc near
+;pushear
+
+cmp posicionObstaculoX5,-1
+je _exit
+
+mov dx,78
+add dx,posicionObstaculoY5
+sub dx,3200
+pintarFranjaPista 1500,dx
+
+;Si ya llego al final==========================00
+cmp posicionObstaculoY5,60800
+je _remove
+
+;Si llego al Y del carro==========================
+xor ax,ax
+mov ax,49600
+cmp posicionObstaculoY5,ax
+je _remove_points_x
+
+jmp _continue
+
+;Si llego al X del carro==========================
+_remove_points_x:
+xor cx,cx
+xor ax,ax
+
+mov cx,15
+mov ax,posicionCarroX
+_loop_comp_x:
+push cx
+mov cx,10
+mov bx,posicionObstaculoX5
+
+_loop_comp_x_int:
+cmp bx,ax
+je _remove_point_t
+inc bx
+Loop _loop_comp_x_int
+pop cx
+
+inc ax
+Loop _loop_comp_x
+jmp _continue
+
+_remove_point_t:
+pop cx
+push bx
+mov bx,puntosMalos
+sub contadorPuntos,bx
+pop bx
+mov al,8
+
+_remove:
+mov posicionObstaculoY5,-1
+mov posicionObstaculoX5,-1
+jmp _continue
+
+_continue:
+add posicionObstaculoY5,320
+pintarObstaculo posicionObstaculoX5,posicionObstaculoY5,tipoObstaculo5
+mov dx,0
+call pintarCarro
+call pintarFranjaAbajo
+_exit:
+;popear
+ret
+moverObstaculo5 endp
+
+moverObstaculo6 proc near
+cmp posicionObstaculoX6,-1
+je _exit
+
+mov dx,78
+add dx,posicionObstaculoY6
+sub dx,3200
+pintarFranjaPista 1500,dx
+
+;Si ya llego al final==========================00
+cmp posicionObstaculoY6,60800
+je _remove
+
+;Si llego al Y del carro==========================
+xor ax,ax
+mov ax,49600
+cmp posicionObstaculoY6,ax
+je _remove_points_x
+
+jmp _continue
+
+;Si llego al X del carro==========================
+_remove_points_x:
+xor cx,cx
+xor ax,ax
+
+mov cx,15
+mov ax,posicionCarroX
+_loop_comp_x:
+push cx
+mov cx,10
+mov bx,posicionObstaculoX6
+
+_loop_comp_x_int:
+cmp bx,ax
+je _remove_point_t
+inc bx
+Loop _loop_comp_x_int
+pop cx
+
+inc ax
+Loop _loop_comp_x
+jmp _continue
+
+_remove_point_t:
+pop cx
+push bx
+mov bx,puntosBuenos
+add contadorPuntos,bx
+pop bx
+mov al,8
+
+_remove:
+mov posicionObstaculoX6,-1
+mov posicionObstaculoY6,-1
+jmp _continue
+
+_continue:
+add posicionObstaculoY6,320
+pintarObstaculo posicionObstaculoX6,posicionObstaculoY6,tipoObstaculo6
+mov dx,0
+call pintarCarro
+call pintarFranjaAbajo
+_exit:
+ret
+moverObstaculo6 endp
+
+moverObstaculo7 proc near
+cmp posicionObstaculoX7,-1
+je _exit
+
+mov dx,78
+add dx,posicionObstaculoY7
+sub dx,3200
+pintarFranjaPista 1500,dx
+
+;Si ya llego al final==========================00
+cmp posicionObstaculoY7,60800
+je _remove
+
+;Si llego al Y del carro==========================
+xor ax,ax
+mov ax,49600
+cmp posicionObstaculoY7,ax
+je _remove_points_x
+
+jmp _continue
+
+;Si llego al X del carro==========================
+_remove_points_x:
+xor cx,cx
+xor ax,ax
+
+mov cx,15
+mov ax,posicionCarroX
+_loop_comp_x:
+push cx
+mov cx,10
+mov bx,posicionObstaculoX7
+
+_loop_comp_x_int:
+cmp bx,ax
+je _remove_point_t
+inc bx
+Loop _loop_comp_x_int
+pop cx
+
+inc ax
+Loop _loop_comp_x
+jmp _continue
+
+_remove_point_t:
+pop cx
+push bx
+mov bx,puntosBuenos
+add contadorPuntos,bx
+pop bx
+mov al,8
+
+_remove:
+mov posicionObstaculoX7,-1
+mov posicionObstaculoY7,-1
+jmp _continue
+
+_continue:
+add posicionObstaculoY7,320
+pintarObstaculo posicionObstaculoX7,posicionObstaculoY7,tipoObstaculo7
+mov dx,0
+call pintarCarro
+call pintarFranjaAbajo
+_exit:
+ret
+moverObstaculo7 endp
+
+moverObstaculo8 proc near
+cmp posicionObstaculoX8,-1
+je _exit
+
+mov dx,78
+add dx,posicionObstaculoY8
+sub dx,3200
+pintarFranjaPista 1500,dx
+
+;Si ya llego al final==========================00
+cmp posicionObstaculoY8,60800
+je _remove
+
+;Si llego al Y del carro==========================
+xor ax,ax
+mov ax,49600
+cmp posicionObstaculoY8,ax
+je _remove_points_x
+
+jmp _continue
+
+;Si llego al X del carro==========================
+_remove_points_x:
+xor cx,cx
+xor ax,ax
+
+mov cx,15
+mov ax,posicionCarroX
+_loop_comp_x:
+push cx
+mov cx,10
+mov bx,posicionObstaculoX8
+
+_loop_comp_x_int:
+cmp bx,ax
+je _remove_point_t
+inc bx
+Loop _loop_comp_x_int
+pop cx
+
+inc ax
+Loop _loop_comp_x
+jmp _continue
+
+_remove_point_t:
+pop cx
+push bx
+mov bx,puntosBuenos
+add contadorPuntos,bx
+pop bx
+mov al,8
+
+_remove:
+mov posicionObstaculoX8,-1
+mov posicionObstaculoY8,-1
+jmp _continue
+
+_continue:
+add posicionObstaculoY8,320
+pintarObstaculo posicionObstaculoX8,posicionObstaculoY8,tipoObstaculo8
+mov dx,0
+call pintarCarro
+call pintarFranjaAbajo
+_exit:
+ret
+moverObstaculo8 endp
+
+moverObstaculo9 proc near
+cmp posicionObstaculoX9,-1
+je _exit
+
+mov dx,78
+add dx,posicionObstaculoY9
+sub dx,3200
+pintarFranjaPista 1500,dx
+
+;Si ya llego al final==========================00
+cmp posicionObstaculoY9,60800
+je _remove
+
+;Si llego al Y del carro==========================
+xor ax,ax
+mov ax,49600
+cmp posicionObstaculoY9,ax
+je _remove_points_x
+
+jmp _continue
+
+;Si llego al X del carro==========================
+_remove_points_x:
+xor cx,cx
+xor ax,ax
+
+mov cx,15
+mov ax,posicionCarroX
+_loop_comp_x:
+push cx
+mov cx,10
+mov bx,posicionObstaculoX9
+
+_loop_comp_x_int:
+cmp bx,ax
+je _remove_point_t
+inc bx
+Loop _loop_comp_x_int
+pop cx
+
+inc ax
+Loop _loop_comp_x
+jmp _continue
+
+_remove_point_t:
+pop cx
+push bx
+mov bx,puntosBuenos
+add contadorPuntos,bx
+pop bx
+mov al,8
+
+_remove:
+mov posicionObstaculoX9,-1
+mov posicionObstaculoY9,-1
+jmp _continue
+
+_continue:
+add posicionObstaculoY9,320
+pintarObstaculo posicionObstaculoX9,posicionObstaculoY9,tipoObstaculo9
+mov dx,0
+call pintarCarro
+call pintarFranjaAbajo
+_exit:
+ret
+moverObstaculo9 endp
+
+moverObstaculo10 proc near
+cmp posicionObstaculoX10,-1
+je _exit
+
+mov dx,78
+add dx,posicionObstaculoY10
+sub dx,3200
+pintarFranjaPista 1500,dx
+
+;Si ya llego al final==========================00
+cmp posicionObstaculoY10,60800
+je _remove
+
+;Si llego al Y del carro==========================
+xor ax,ax
+mov ax,49600
+cmp posicionObstaculoY10,ax
+je _remove_points_x
+
+jmp _continue
+
+;Si llego al X del carro==========================
+_remove_points_x:
+xor cx,cx
+xor ax,ax
+
+mov cx,15
+mov ax,posicionCarroX
+_loop_comp_x:
+push cx
+mov cx,10
+mov bx,posicionObstaculoX10
+
+_loop_comp_x_int:
+cmp bx,ax
+je _remove_point_t
+inc bx
+Loop _loop_comp_x_int
+pop cx
+
+inc ax
+Loop _loop_comp_x
+jmp _continue
+
+_remove_point_t:
+pop cx
+push bx
+mov bx,puntosBuenos
+add contadorPuntos,bx
+pop bx
+mov al,8
+
+_remove:
+mov posicionObstaculoX10,-1
+mov posicionObstaculoY10,-1
+jmp _continue
+
+_continue:
+add posicionObstaculoY10,320
+pintarObstaculo posicionObstaculoX10,posicionObstaculoY10,tipoObstaculo10
+mov dx,0
+call pintarCarro
+call pintarFranjaAbajo
+_exit:
+ret
+moverObstaculo10 endp
 
 GetTime proc near
     mov ah,2ch
@@ -435,6 +1047,257 @@ Convert proc near
     or ax,3030h
     ret
 Convert endp
+
+insertarObstaculo1 proc near
+pushear
+
+cmp posicionObstaculoX1,-1
+jne _exit
+
+call numeroAleatorio
+mov ax,83
+add ax,numero
+
+mov posicionObstaculoX1,ax
+mov posicionObstaculoY1,9600
+
+_exit:
+popear
+ret
+insertarObstaculo1 endp
+
+insertarObstaculo2 proc near
+pushear
+
+cmp posicionObstaculoX2,-1
+jne _exit
+
+call numeroAleatorio
+mov ax,163
+add ax,numero
+
+mov posicionObstaculoX2,ax
+mov posicionObstaculoY2,9600
+
+_exit:
+popear
+ret
+insertarObstaculo2 endp
+
+insertarObstaculo3 proc near
+pushear
+
+cmp posicionObstaculoX3,-1
+jne _exit
+
+call numeroAleatorio
+mov ax,113
+add ax,numero
+
+mov posicionObstaculoX3,ax
+mov posicionObstaculoY3,9600
+
+_exit:
+popear
+ret
+insertarObstaculo3 endp
+
+insertarObstaculo4 proc near
+pushear
+
+cmp posicionObstaculoX4,-1
+jne _exit
+
+call numeroAleatorio
+mov ax,103
+add ax,numero
+
+mov posicionObstaculoX4,ax
+mov posicionObstaculoY4,9600
+
+_exit:
+popear
+ret
+insertarObstaculo4 endp
+
+insertarObstaculo5 proc near
+pushear
+
+cmp posicionObstaculoX5,-1
+jne _exit
+
+call numeroAleatorio
+mov ax,123
+add ax,numero
+
+mov posicionObstaculoX5,ax
+mov posicionObstaculoY5,9600
+
+_exit:
+popear
+ret
+insertarObstaculo5 endp
+
+insertarObstaculo6 proc near
+pushear
+
+cmp posicionObstaculoX6,-1
+jne _exit
+
+call numeroAleatorio
+mov ax,183
+add ax,numero
+
+mov posicionObstaculoX6,ax
+mov posicionObstaculoY6,9600
+
+_exit:
+popear
+ret
+insertarObstaculo6 endp
+
+insertarObstaculo7 proc near
+pushear
+
+cmp posicionObstaculoX7,-1
+jne _exit
+
+call numeroAleatorio
+mov ax,133
+add ax,numero
+
+mov posicionObstaculoX7,ax
+mov posicionObstaculoY7,9600
+
+_exit:
+popear
+ret
+insertarObstaculo7 endp
+
+insertarObstaculo8 proc near
+pushear
+
+cmp posicionObstaculoX8,-1
+jne _exit
+
+call numeroAleatorio
+mov ax,153
+add ax,numero
+
+mov posicionObstaculoX8,ax
+mov posicionObstaculoY8,9600
+
+_exit:
+popear
+ret
+insertarObstaculo8 endp
+
+insertarObstaculo9 proc near
+pushear
+cmp posicionObstaculoX9,-1
+jne _exit
+
+call numeroAleatorio
+mov ax,143
+add ax,numero
+
+mov posicionObstaculoX9,ax
+mov posicionObstaculoY9,9600
+
+_exit:
+popear
+ret
+insertarObstaculo9 endp
+
+insertarObstaculo10 proc near
+pushear
+
+cmp posicionObstaculoX10,-1
+jne _exit
+
+call numeroAleatorio
+mov ax,83
+add ax,numero
+
+mov posicionObstaculoX10,ax
+mov posicionObstaculoY10,9600
+
+_exit:
+popear
+ret
+insertarObstaculo10 endp
+
+insertarMalos proc near
+pushear
+cmp timerObstaculo,0
+jne _exit
+mov bx,tiempoObstaculo
+mov timerObstaculo,bx
+
+mov bx,posicionObstaculoX1
+call insertarObstaculo1
+cmp bx,-1
+je _exit
+
+mov bx,posicionObstaculoX2
+call insertarObstaculo2
+cmp bx,-1
+je _exit
+
+mov bx,posicionObstaculoX3
+call insertarObstaculo3
+cmp bx,-1
+je _exit
+
+mov bx,posicionObstaculoX4
+call insertarObstaculo4
+cmp bx,-1
+je _exit
+
+mov bx,posicionObstaculoX5
+call insertarObstaculo5
+cmp bx,-1
+je _exit
+_exit:
+popear
+ret
+insertarMalos endp
+
+insertarBuenos proc near
+pushear
+cmp timerPremio,0
+jne _exit
+mov bx,tiempoPremio
+mov timerPremio,bx
+
+mov bx,posicionObstaculoX6
+call insertarObstaculo6
+cmp bx,-1
+je _exit
+
+mov bx,posicionObstaculoX7
+call insertarObstaculo7
+cmp bx,-1
+je _exit
+
+mov bx,posicionObstaculoX8
+call insertarObstaculo8
+cmp bx,-1
+je _exit
+
+mov bx,posicionObstaculoX9
+call insertarObstaculo9
+cmp bx,-1
+je _exit
+
+mov bx,posicionObstaculoX10
+call insertarObstaculo10
+cmp bx,-1
+je _exit
+_exit:
+popear
+ret
+insertarBuenos endp
 
 ;=================================================================
 ;==============================PINTAR=============================
